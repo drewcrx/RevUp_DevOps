@@ -1,0 +1,6 @@
+services:
+  revup-web:
+    build: .
+    container_name: revup-web
+    ports:
+      - "5000:5000"
