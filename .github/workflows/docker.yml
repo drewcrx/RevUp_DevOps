@@ -55,8 +55,6 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
-          timeout: 60s
-          command_timeout: 5m
           script: |
             echo "Conexión SSH correcta"
             whoami
