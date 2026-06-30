@@ -32,13 +32,21 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_LDGS }}
 
       - name: Construir imagen Docker
         run: docker build -t ghcr.io/drewcrx/revup-web:1.0.0 .
 
       - name: Publicar imagen en GHCR
         run: docker push ghcr.io/drewcrx/revup-web:1.0.0
+
+      - name: Validar secrets del VPS
+        run: |
+          test -n "${{ secrets.VPS_HOST }}" || (echo "Falta VPS_HOST" && exit 1)
+          test -n "${{ secrets.VPS_USER }}" || (echo "Falta VPS_USER" && exit 1)
+          test -n "${{ secrets.VPS_PASSWORD }}" || (echo "Falta VPS_PASSWORD" && exit 1)
+          test -n "${{ secrets.VPS_PORT }}" || (echo "Falta VPS_PORT" && exit 1)
+          test -n "${{ secrets.GHCR_LDGS }}" || (echo "Falta GHCR_LDGS" && exit 1)
 
       - name: Probar conexión SSH en VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -49,6 +57,19 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             echo "Conexión SSH correcta"
+            whoami
+            hostname
+            pwd
+
+      - name: Preparar carpeta en VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            mkdir -p /home/${{ secrets.VPS_USER }}/revup
 
       - name: Pasar stack al VPS
         uses: appleboy/scp-action@v1
@@ -71,7 +92,7 @@ jobs:
             cd /home/${{ secrets.VPS_USER }}/revup
 
             echo "==> Iniciando sesión en GHCR"
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GHCR_LDGS }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "==> Descargando la imagen desde GHCR"
             docker pull ghcr.io/drewcrx/revup-web:1.0.0
