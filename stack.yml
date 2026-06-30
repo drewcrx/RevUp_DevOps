@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  app:
+  revup-web:
     image: ghcr.io/drewcrx/revup-web:1.0.0
     networks:
       - traefik-public
@@ -16,21 +16,22 @@ services:
         - "traefik.enable=true"
 
         # HTTP
-        - "traefik.http.routers.revup.entrypoints=http"
         - "traefik.http.routers.revup.rule=Host(`revup.byronrm.com`)"
-        - "traefik.http.middlewares.revup-https-redirect.redirectscheme.scheme=https"
-        - "traefik.http.middlewares.revup-https-redirect.redirectscheme.permanent=true"
+        - "traefik.http.routers.revup.entrypoints=http"
         - "traefik.http.routers.revup.middlewares=revup-https-redirect"
 
+        # Redirección a HTTPS
+        - "traefik.http.middlewares.revup-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.revup-https-redirect.redirectscheme.permanent=true"
+
         # HTTPS
-        - "traefik.http.routers.revup-secure.entrypoints=https"
         - "traefik.http.routers.revup-secure.rule=Host(`revup.byronrm.com`)"
-        - "traefik.http.routers.revup-secure.tls=true"
+        - "traefik.http.routers.revup-secure.entrypoints=https"
         - "traefik.http.routers.revup-secure.tls.certresolver=http"
-        - "traefik.http.routers.revup-secure.service=revup-app"
+        - "traefik.http.routers.revup-secure.service=revup-web"
 
         # Puerto interno de Flask
-        - "traefik.http.services.revup-app.loadbalancer.server.port=5000"
+        - "traefik.http.services.revup-web.loadbalancer.server.port=5000"
 
         # Red de Traefik
         - "traefik.docker.network=traefik-public"
